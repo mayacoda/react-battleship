@@ -5,8 +5,8 @@
     "client",
     "server"
   ],
-  "version": "0.1.0",
-  "description": "R3F + websocket battleship game",
+  "version": "0.0.0",
+  "description": "R3F + WebSocket battleship game",
   "repository": "https://github.com/mayacoda/react-battleship",
   "author": "Maya Nedeljković Batić",
   "license": "MIT",
@@ -29,7 +29,6 @@
     "lint-staged": "^15.0.2"
   },
   "type": "module",
-  "packageManager": "yarn@3.2.3",
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
   }
