@@ -1,0 +1,10 @@
+dist
+assets
+public
+
+.pnpm-lock.yaml
+
+*.glsl
+*.vert
+*.frag
+*.md
