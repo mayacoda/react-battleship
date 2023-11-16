@@ -1,55 +1,48 @@
-import fastify from "fastify";
-import fastifyWebsocket, { SocketStream } from "@fastify/websocket";
-import fastifyCors from "@fastify/cors";
+import Fastify from "fastify";
+import { Server, Socket } from "socket.io";
+import { TypedServer } from "@react-battleship/types";
 
-const server = fastify({ logger: true });
+const fastify = Fastify({ logger: true });
+const io: TypedServer = new Server(fastify.server, {});
 
-// Register the WebSocket plugin
-server.register(fastifyWebsocket);
+void fastify.listen({ port: 3000 });
 
-// Configure CORS
-server.register(fastifyCors, {
-  origin: ["http://localhost:5173"],
+// fastify.register(FastifyStatic, {
+//   root: path.join(process.cwd(), "..", "client/dist"),
+// });
+
+fastify.get("/", function (_req, reply) {
+  reply.header("Access-Control-Allow-Origin", "*");
+  reply.header("Access-Control-Allow-Methods", "GET");
+  reply.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Origin, Cache-Control",
+  );
+
+  reply.type("text/html").send("index.html");
 });
 
-// WebSocket route
-server.register(async () =>
-  server.get("/ws", { websocket: true }, (connection: SocketStream) => {
-    connection.socket.on("message", (message: Buffer) => {
-      server.log.info("Received message:", message.toString());
+// registering the socket.io plugin
 
-      // Echo the message back to the client
-      connection.socket.send(`Echo: ${message}`);
-    });
+fastify.ready().then(() => {
+  io.on("connection", (socket: Socket) => {
+    console.log("got a connection", socket);
+  });
+});
 
-    connection.socket.on("open", () => {
-      server.log.info("Client connected.");
-    });
+const externalPort = parseInt(process.env.PORT!);
+const port: number = isNaN(externalPort) ? 3000 : externalPort;
 
-    connection.socket.on("close", () => {
-      server.log.info("Client disconnected.");
-    });
-
-    connection.socket.on("error", (error: Error) => {
-      server.log.error(error);
-    });
-  }),
+fastify.listen(
+  {
+    port,
+    host: "0.0.0.0",
+  },
+  (err, address) => {
+    if (err) {
+      fastify.log.error(err);
+      process.exit(1);
+    }
+    fastify.log.info(`server listening on ${address}`);
+  },
 );
-
-// Start the server
-const start = async () => {
-  try {
-    await server.listen({ port: 3000 });
-    let address = server.server.address();
-    console.log(
-      `Server listening on port ${
-        typeof address !== "string" ? address?.port ?? "unknown" : address
-      }`,
-    );
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
-  }
-};
-
-void start();

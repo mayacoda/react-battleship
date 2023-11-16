@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
+import { TypedClient } from "@react-battleship/types";
 
 function App() {
   return (
@@ -10,7 +12,7 @@ function App() {
 }
 
 const WebSocketComponent = () => {
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [ws, setWs] = useState<TypedClient>();
 
   useEffect(() => {
     // Cleanup WebSocket on component unmount
@@ -26,29 +28,20 @@ const WebSocketComponent = () => {
       console.log("WebSocket already connected");
       return;
     }
-    const websocket = new WebSocket("ws://localhost:3000/ws");
 
-    console.log(websocket);
+    const socket: TypedClient = io("ws://localhost:3000", {
+      transports: ["websocket"],
+    });
 
-    websocket.onopen = () => {
-      console.log("WebSocket Connected");
+    socket.on("connect", () => {
+      console.log("socket connected");
+    });
 
-      websocket.send("message from client");
-    };
+    socket.on("disconnect", () => {
+      console.log("socket disconnected");
+    });
 
-    websocket.onmessage = (event) => {
-      console.log("Message from server:", event.data);
-    };
-
-    websocket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    websocket.onclose = (event) => {
-      console.log("WebSocket closed:", event);
-    };
-
-    setWs(websocket);
+    setWs(socket);
   };
 
   return (
