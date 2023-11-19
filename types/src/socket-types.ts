@@ -1,8 +1,8 @@
-import { SHIP_TYPE } from "../../constants/ships";
-import { Player } from "./player-types";
-import { EndState } from "./game-types";
-import { Server } from "socket.io";
-import { Socket } from "socket.io-client";
+import { SHIP_TYPE } from "../../constants/ships.js";
+import { Player } from "./player-types.js";
+import { EndState } from "./game-types.js";
+import { Server, Socket as ServerSocket } from "socket.io";
+import { Socket as ClientSocket } from "socket.io-client";
 
 export type Ship = {
   type: SHIP_TYPE;
@@ -44,4 +44,12 @@ export type ClientToServerEvents = {
 
 export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 
-export type TypedClient = Socket<ServerToClientEvents, ClientToServerEvents>;
+export type TypedClient = ClientSocket<
+  ServerToClientEvents,
+  ClientToServerEvents
+>;
+
+export type TypedServerSocket = ServerSocket<
+  ClientToServerEvents,
+  ServerToClientEvents
+>;

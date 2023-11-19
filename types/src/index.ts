@@ -1,3 +1,3 @@
-export * from "./socket-types";
-export * from "./player-types";
-export * from "./game-types";
+export * from "./socket-types.js";
+export * from "./player-types.js";
+export * from "./game-types.js";
