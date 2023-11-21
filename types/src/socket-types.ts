@@ -1,4 +1,4 @@
-import { SHIP_TYPE } from "../../constants/ships.js";
+import { SHIP_TYPE } from "./ships.js";
 import { Player } from "./player-types.js";
 import { EndState } from "./game-types.js";
 import { Server, Socket as ServerSocket } from "socket.io";

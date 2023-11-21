@@ -1,6 +1,7 @@
 import Fastify from "fastify";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { TypedServer } from "@react-battleship/types";
+import { PlayerManager } from "./PlayerManager.js";
 
 const fastify = Fastify({ logger: true });
 const io: TypedServer = new Server(fastify.server, {});
@@ -22,11 +23,11 @@ fastify.get("/", function (_req, reply) {
   reply.type("text/html").send("index.html");
 });
 
-// registering the socket.io plugin
-
 fastify.ready().then(() => {
-  io.on("connection", (socket: Socket) => {
-    console.log("got a connection", socket);
+  const playerManger = new PlayerManager(io);
+
+  io.on("connection", (socket) => {
+    playerManger.initPlayerCommunication(socket);
   });
 });
 

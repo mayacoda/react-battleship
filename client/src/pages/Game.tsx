@@ -8,6 +8,7 @@ const createEmptyGrid = () =>
 
 const grid = createEmptyGrid();
 const cellSize = `${100 / GRID_SIZE}vw`;
+const cols = `grid-cols-${GRID_SIZE}`;
 
 const GamePage = () => {
   const { gameId } = useParams();
@@ -27,7 +28,7 @@ const GamePage = () => {
           maxHeight: "100vh",
           width: "100vh",
         }}
-        className="grid grid-cols-5 gap-0"
+        className={`grid ${cols} gap-0`}
       >
         {grid.map((row, rowIndex) =>
           row.map((_cell, colIndex) => (
