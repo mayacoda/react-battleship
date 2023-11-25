@@ -7,7 +7,7 @@ type Props = {
   onLogin: (username: string) => void;
 };
 
-const LoginPage = ({ onLogin }: Props) => {
+export function LoginPage({ onLogin }: Props) {
   const [username, setUsername] = useState("");
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -39,6 +39,4 @@ const LoginPage = ({ onLogin }: Props) => {
       </Card>
     </div>
   );
-};
-
-export default LoginPage;
+}

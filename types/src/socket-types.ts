@@ -10,6 +10,13 @@ export type Ship = {
   direction: "horizontal" | "vertical";
 };
 
+export type ResultParams = {
+  firedBy: string;
+  x: number;
+  y: number;
+  hit: boolean;
+};
+
 export type ServerToClientEvents = {
   updatePlayers: (players: Record<string, Player>) => void;
   initPlayer: (player: Player) => void;
@@ -18,12 +25,7 @@ export type ServerToClientEvents = {
   initShips: (ships: Ship[]) => void;
   yourTurn: () => void;
   endTurn: () => void;
-  result: (result: {
-    firedBy: string;
-    x: number;
-    y: number;
-    hit: boolean;
-  }) => void;
+  result: (result: ResultParams) => void;
   gameOver: (endState: EndState) => void;
 };
 
