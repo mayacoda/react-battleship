@@ -1,23 +1,60 @@
-import { GRID_SIZE, SHIP_TYPE } from "@react-battleship/types";
+import {
+  EndState,
+  GameOverReason,
+  GRID_SIZE,
+  SHIP_TYPE,
+} from "@react-battleship/types";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
+import withSocketProtection from "@/pages/withSocketProtection.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 const cellSize = `${100 / GRID_SIZE}vw`;
 
+export const ProtectedGamePage = withSocketProtection(GamePage);
+
 export function GamePage() {
-  const { gameState } = useGameContext();
+  const { gameState, socket, currentPlayer, onGameFinished, onForfeit } =
+    useGameContext();
+  const [gameOverReason, setGameOverReason] = useState<GameOverReason>();
+
+  socket?.on("gameOver", (result: EndState) => {
+    if (currentPlayer) {
+      const reason = result[currentPlayer.id];
+      setGameOverReason(reason);
+    }
+  });
 
   return (
-    gameState && (
-      <div>
-        <h1 className="text-2xl">Playing against {gameState?.opponent.name}</h1>
-        <p>It's {gameState?.yourTurn ? "your" : "opponent's"} turn</p>
-        <p>{gameState?.opponent.name}'s Ships</p>
-        <OpponentGrid />
-        <p>Your Ships</p>
-        <PlayerGrid />
-      </div>
-    )
+    <>
+      {gameOverReason && (
+        <GameOverAlert
+          gameOverReason={gameOverReason}
+          onConfirm={onGameFinished}
+        />
+      )}
+      {gameState && (
+        <div>
+          <h1 className="text-2xl">
+            Playing against {gameState?.opponent.name}
+          </h1>
+          <Button onClick={onForfeit}>Forfeit</Button>
+          <p>It's {gameState?.yourTurn ? "your" : "opponent's"} turn</p>
+          <p>{gameState?.opponent.name}'s Ships</p>
+          <OpponentGrid />
+          <p>Your Ships</p>
+          <PlayerGrid />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -96,5 +133,41 @@ function Grid({
         )),
       )}
     </div>
+  );
+}
+
+function GameOverAlert({
+  gameOverReason,
+  onConfirm,
+}: {
+  gameOverReason: GameOverReason;
+  onConfirm: () => void;
+}) {
+  let text = "";
+  switch (gameOverReason) {
+    case "win":
+      text = `You won! ✨`;
+      break;
+    case "lose":
+      text = `You lost! 😢`;
+      break;
+    case "forfeit":
+      text = `You forfeited! 😱`;
+      break;
+    case "disconnect":
+      text = `Your opponent disconnected! 💔`;
+      break;
+  }
+
+  return (
+    <AlertDialog open={true}>
+      <AlertDialogContent>
+        <AlertDialogTitle>Game Over</AlertDialogTitle>
+        <AlertDialogDescription>{text}</AlertDialogDescription>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={onConfirm}>Okay</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

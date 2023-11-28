@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { ChallengeAlert } from "@/components/ui/ChallengeAlert.tsx";
 import { useCallback } from "react";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
+import withSocketProtection from "@/pages/withSocketProtection.tsx";
+
+export const ProtectedLobbyPage = withSocketProtection(LobbyPage);
 
 export function LobbyPage() {
   const game = useGameContext();

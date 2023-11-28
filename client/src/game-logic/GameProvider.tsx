@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { createEmptyGrid } from "@/game-logic/utils.ts";
 
 type GameContextType = {
+  isConnected: boolean;
   players: Record<string, Player>;
   currentPlayer: Player | null;
   challenges: Player[];
@@ -30,9 +31,12 @@ type GameContextType = {
   onAcceptChallenge: (playerId: string) => void;
   onDismissChallenge: (playerId: string) => void;
   onCannonFired: (x: number, y: number) => void;
+  onForfeit: () => void;
+  onGameFinished: () => void;
 };
 
 const defaultContext: GameContextType = {
+  isConnected: false,
   players: {},
   challenges: [],
   currentPlayer: null,
@@ -44,6 +48,8 @@ const defaultContext: GameContextType = {
   onAcceptChallenge: () => {},
   onDismissChallenge: () => {},
   onCannonFired: () => {},
+  onForfeit: () => {},
+  onGameFinished: () => {},
 };
 export const GameContext = createContext<GameContextType>(defaultContext);
 
@@ -51,10 +57,12 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
   const [players, setPlayers] = useState<Record<string, Player>>({});
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [challenges, setChallenges] = useState<Player[]>([]);
+  const [onGameFinished, setOnGameFinished] = useState<() => void>(() => {});
   const [socket, setSocket] = useState<TypedClient | null>(null);
   const [gameState, setGameState] =
     useState<GameContextType["gameState"]>(null);
   const [previousGames, setPreviousGames] = useState<EndState[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,6 +75,7 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
     let localPlayer: Player | null = null;
 
     newSocket.on("disconnect", () => {
+      setIsConnected(false);
       setGameState(null);
       setPlayers({});
       setCurrentPlayer(null);
@@ -75,7 +84,7 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
       navigate("/");
     });
     newSocket.on("initPlayer", (p: Player) => {
-      console.log("INITIALIZING PLAYER", p);
+      setIsConnected(true);
       localPlayer = p;
       setCurrentPlayer(localPlayer);
       navigate("/lobby");
@@ -159,16 +168,17 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
       newSocket.on("result", resultHandler);
 
       newSocket.on("gameOver", (result) => {
-        newSocket.off("initShips", initShipsHandler);
-        newSocket.off("yourTurn", yourTurnHandler);
-        newSocket.off("endTurn", endTurnHandler);
-        newSocket.off("result", resultHandler);
-        setPreviousGames((prev) => [result, ...prev]);
-        setGameState(null);
-        navigate("/lobby");
+        setOnGameFinished(() => () => {
+          newSocket.off("initShips", initShipsHandler);
+          newSocket.off("yourTurn", yourTurnHandler);
+          newSocket.off("endTurn", endTurnHandler);
+          newSocket.off("result", resultHandler);
+          setPreviousGames((prev) => [result, ...prev]);
+          setGameState(null);
+          navigate("/lobby");
+        });
       });
     });
-
     // Cleanup on unmount
     return () => {
       newSocket.close();
@@ -178,6 +188,7 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
 
   // Value provided to the context consumers
   const contextValue = {
+    isConnected,
     challenges,
     currentPlayer,
     players,
@@ -194,6 +205,10 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
     onCannonFired: (x: number, y: number) => {
       socket?.emit("fire", x, y);
     },
+    onForfeit: () => {
+      socket?.emit("forfeit");
+    },
+    onGameFinished,
   };
 
   return (
