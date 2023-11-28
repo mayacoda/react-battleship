@@ -5,7 +5,7 @@ import {
   SHIP_TYPE,
 } from "@react-battleship/types";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,15 +16,25 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 
-const cellSize = `${100 / GRID_SIZE}vw`;
+const GRID_WIDTH = 90;
+const CELL_SIZE = `${GRID_WIDTH / GRID_SIZE}vw`;
+const TURN_DURATION = 7;
 
 export const ProtectedGamePage = withSocketProtection(GamePage);
 
 export function GamePage() {
-  const { gameState, socket, currentPlayer, onGameFinished, onForfeit } =
-    useGameContext();
+  const {
+    gameState,
+    socket,
+    currentPlayer,
+    onGameFinished,
+    onForfeit,
+    onCannonFired,
+  } = useGameContext();
   const [gameOverReason, setGameOverReason] = useState<GameOverReason>();
+  const [turnTimer, setTurnTimer] = useState(TURN_DURATION);
 
   socket?.on("gameOver", (result: EndState) => {
     if (currentPlayer) {
@@ -32,6 +42,25 @@ export function GamePage() {
       setGameOverReason(reason);
     }
   });
+
+  useEffect(() => {
+    if (gameState?.yourTurn) {
+      const interval = setInterval(() => {
+        setTurnTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [gameState?.yourTurn]);
+
+  useEffect(() => {
+    if (turnTimer === 0) {
+      // random x and y on the grid
+      const x = Math.floor(Math.random() * GRID_SIZE);
+      const y = Math.floor(Math.random() * GRID_SIZE);
+      onCannonFired(x, y);
+      setTurnTimer(TURN_DURATION);
+    }
+  }, [gameState?.yourTurn, onCannonFired, turnTimer]);
 
   return (
     <>
@@ -43,25 +72,34 @@ export function GamePage() {
       )}
       {gameState && (
         <div>
-          <h1 className="text-2xl">
-            Playing against {gameState?.opponent.name}
+          <h1 className="text-2xl flex flex-row justify-between mt-2 px-2">
+            <Badge variant={gameState?.yourTurn ? "default" : "outline"}>
+              {gameState?.yourTurn
+                ? `Turn ends in ${turnTimer}`
+                : "Opponent's turn"}
+            </Badge>
+            <Button variant="destructive" onClick={onForfeit}>
+              Forfeit
+            </Button>
           </h1>
-          <Button onClick={onForfeit}>Forfeit</Button>
-          <p>It's {gameState?.yourTurn ? "your" : "opponent's"} turn</p>
-          <p>{gameState?.opponent.name}'s Ships</p>
-          <OpponentGrid />
-          <p>Your Ships</p>
-          <PlayerGrid />
+
+          <div className="flex flex-col items-center">
+            <p>{gameState?.opponent.name}'s Ships</p>
+            <OpponentGrid onFired={() => setTurnTimer(TURN_DURATION)} />
+            <p className="mt-4">Your Ships</p>
+            <PlayerGrid />
+          </div>
         </div>
       )}
     </>
   );
 }
 
-function OpponentGrid() {
+function OpponentGrid({ onFired }: { onFired: () => void }) {
   const { onCannonFired, gameState } = useGameContext();
   const handleCellClick = (row: number, col: number) => {
     onCannonFired(row, col);
+    onFired();
   };
 
   return (
@@ -104,10 +142,10 @@ function Grid({
   return (
     <div
       style={{
-        maxWidth: "100vw",
-        height: "100vw",
-        maxHeight: "100vh",
-        width: "100vh",
+        width: GRID_WIDTH + "vw",
+        maxWidth: GRID_WIDTH + "vw",
+        height: GRID_WIDTH + "vw",
+        maxHeight: GRID_WIDTH + "vw",
       }}
       className={`grid grid-cols-6 gap-0`}
     >
@@ -117,8 +155,8 @@ function Grid({
             key={`${rowIndex}-${colIndex}`}
             onClick={() => handleCellClick?.(rowIndex, colIndex)}
             style={{
-              width: cellSize,
-              height: cellSize,
+              width: CELL_SIZE,
+              height: CELL_SIZE,
             }}
             className={`${
               cell === 1
