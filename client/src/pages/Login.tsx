@@ -26,6 +26,7 @@ export function LoginPage({ onLogin }: Props) {
             <Input
               type="text"
               className="mb-3"
+              autoComplete="off"
               placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
