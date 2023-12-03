@@ -6,6 +6,7 @@ import {
   Ship,
   SHIP_SIZE,
   TypedClient,
+  Vec3,
 } from "@react-battleship/types";
 import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +34,7 @@ type GameContextType = {
   onCannonFired: (x: number, y: number) => void;
   onForfeit: () => void;
   onGameFinished: () => void;
+  onPlayerMoved: (position: Vec3) => void;
 };
 
 const defaultContext: GameContextType = {
@@ -50,6 +52,7 @@ const defaultContext: GameContextType = {
   onCannonFired: () => {},
   onForfeit: () => {},
   onGameFinished: () => {},
+  onPlayerMoved: () => {},
 };
 export const GameContext = createContext<GameContextType>(defaultContext);
 
@@ -91,7 +94,9 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
     });
     newSocket.on("updatePlayers", (p: Record<string, Player>) => {
       localPlayers = p;
+      localPlayer = p[localPlayer?.id || ""];
       setPlayers(p);
+      setCurrentPlayer(localPlayer);
     });
     newSocket.on("challenge", (playerId: string) => {
       setChallenges((prev) => [...prev, localPlayers[playerId]]);
@@ -209,6 +214,9 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
       socket?.emit("forfeit");
     },
     onGameFinished,
+    onPlayerMoved: (position: Vec3) => {
+      socket?.emit("move", position);
+    },
   };
 
   return (
