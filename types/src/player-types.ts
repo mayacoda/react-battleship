@@ -3,7 +3,7 @@ export type Player = {
   name: string;
   isPlaying: boolean;
   position: Vec3;
-  rotation: Vec4 | null;
+  rotation: Vec4;
   linkToTwitter: boolean;
 };
 
