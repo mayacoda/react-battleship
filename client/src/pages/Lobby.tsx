@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { ChallengeAlert } from "@/components/ui/ChallengeAlert.tsx";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
 import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
@@ -210,17 +210,30 @@ function PlayerSphere({
   player: Player;
   onChallenge: (playerId: string) => void;
 }) {
+  const [showChallengeButton, setShowChallengeButton] = useState(false);
+
+  useEffect(() => {
+    if (showChallengeButton) {
+      const timer = setTimeout(() => {
+        setShowChallengeButton(false);
+      }, 7000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showChallengeButton]);
+
   return (
-    <group position={[player.position.x, player.position.y, player.position.z]}>
-      <mesh
-        onClick={(e) => {
-          e.stopPropagation();
-          onChallenge(player.id);
-        }}
-      >
+    <group
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowChallengeButton((prev) => !prev);
+      }}
+      position={[player.position.x, player.position.y, player.position.z]}
+    >
+      <mesh>
         <sphereGeometry args={[0.2, 32, 32]} />
         <meshStandardMaterial color={player.isPlaying ? "red" : "green"} />
-        <Html>
+        <Html style={{ pointerEvents: "none" }}>
           <div
             style={{
               transform: "translate3d(-50%, -70px, 0)",
@@ -228,7 +241,15 @@ function PlayerSphere({
               textAlign: "center",
             }}
           >
-            {player.name}
+            <p>{player.name}</p>
+            {showChallengeButton && (
+              <Button
+                style={{ pointerEvents: "all" }}
+                onClick={() => onChallenge(player.id)}
+              >
+                Challenge
+              </Button>
+            )}
           </div>
         </Html>
       </mesh>
