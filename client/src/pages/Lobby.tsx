@@ -33,7 +33,7 @@ export function LobbyPage() {
     <>
       <ChallengeAlert />
       <div className="flex flex-col h-screen">
-        {/*<PrototypeLobby />*/}
+        <PrototypeLobby />
         <R3FLobbyWrapper />
       </div>
     </>

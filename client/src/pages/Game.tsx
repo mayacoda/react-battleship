@@ -2,7 +2,7 @@ import {
   EndState,
   GameOverReason,
   GRID_SIZE,
-  SHIP_TYPE,
+  SHIP_SIZE,
 } from "@react-battleship/types";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
 import { ReactNode, useEffect, useState } from "react";
@@ -17,9 +17,13 @@ import {
 import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { Color, Vector3 } from "three";
 
-const GRID_WIDTH = 90;
-const CELL_SIZE = `${GRID_WIDTH / GRID_SIZE}vw`;
+const GRID_WIDTH = 6;
+const CELL_SIZE = GRID_WIDTH / GRID_SIZE;
+
 const TURN_DURATION = 7;
 
 export const ProtectedGamePage = withSocketProtection(GamePage);
@@ -71,7 +75,7 @@ export function GamePage() {
         />
       )}
       {gameState && (
-        <div>
+        <div className="h-full">
           <h1 className="text-2xl flex flex-row justify-between mt-2 px-2">
             <Badge variant={gameState?.yourTurn ? "default" : "outline"}>
               {gameState?.yourTurn
@@ -82,97 +86,169 @@ export function GamePage() {
               Forfeit
             </Button>
           </h1>
-
-          <div className="flex flex-col items-center">
-            <p>{gameState?.opponent.name}'s Ships</p>
-            <OpponentGrid onFired={() => setTurnTimer(TURN_DURATION)} />
-            <p className="mt-4">Your Ships</p>
-            <PlayerGrid />
-          </div>
+          <Canvas
+            className="flex flex-col items-center"
+            camera={{ position: [0, 10, 0] }}
+          >
+            <R3FGame onFired={() => setTurnTimer(TURN_DURATION)} />
+          </Canvas>
         </div>
       )}
     </>
   );
 }
 
-function OpponentGrid({ onFired }: { onFired: () => void }) {
-  const { onCannonFired, gameState } = useGameContext();
-  const handleCellClick = (row: number, col: number) => {
-    onCannonFired(row, col);
-    onFired();
-  };
+function R3FGame({ onFired }: { onFired: () => void }) {
+  const { gameState, onCannonFired } = useGameContext();
+  useFrame((state) => {
+    state.camera.lookAt(new Vector3(0, 0, 0));
+  });
 
   return (
-    gameState && (
-      <Grid handleCellClick={handleCellClick} grid={gameState.opponentGrid} />
-    )
+    <>
+      <ambientLight />
+      <OrbitControls />
+      <OpponentGrid />
+      <PlayerGrid />
+      <WaterBackground
+        onClick={(e: ThreeEvent<MouseEvent>) => {
+          const x = e.point.x;
+          const z = e.point.z + 3.25;
+          const isInOpponentGrid =
+            x >= -GRID_WIDTH / 2 &&
+            x <= GRID_WIDTH / 2 &&
+            z >= -GRID_WIDTH / 2 &&
+            z <= GRID_WIDTH / 2;
+
+          if (!isInOpponentGrid || !gameState?.yourTurn) {
+            return;
+          }
+
+          const col = Math.floor((x + GRID_WIDTH / 2) / CELL_SIZE);
+          const row = Math.floor((z + GRID_WIDTH / 2) / CELL_SIZE);
+
+          onCannonFired(row, col);
+          onFired();
+        }}
+      />
+    </>
+  );
+}
+
+function WaterBackground({
+  onClick,
+}: {
+  onClick: (e: ThreeEvent<MouseEvent>) => void;
+}) {
+  return (
+    <mesh
+      onClick={onClick}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.01, 0]}
+    >
+      <planeGeometry args={[100, 100]} />
+      <meshStandardMaterial color={new Color("#91f8ec")} />
+    </mesh>
+  );
+}
+
+function OpponentGrid() {
+  const { gameState } = useGameContext();
+
+  return (
+    gameState && <Grid grid={gameState.opponentGrid} position={[0, 0, -3.25]} />
   );
 }
 
 function PlayerGrid() {
   const { gameState } = useGameContext();
 
-  const getCell = (row: number, col: number) => {
-    switch (gameState?.yourShips[row][col]) {
-      case SHIP_TYPE.BATTLESHIP:
-        return "B";
-      case SHIP_TYPE.CRUISER:
-        return "C";
-      case SHIP_TYPE.SUBMARINE:
-        return "S";
-      case SHIP_TYPE.CARRIER:
-        return "A";
-      default:
-        return null;
-    }
-  };
-
-  return gameState && <Grid grid={gameState.yourGrid} getCell={getCell} />;
-}
-
-function Grid({
-  handleCellClick,
-  getCell,
-  grid,
-}: {
-  handleCellClick?: (row: number, col: number) => void;
-  getCell?: (row: number, col: number) => ReactNode;
-  grid: number[][];
-}) {
   return (
-    <div
-      style={{
-        width: GRID_WIDTH + "vw",
-        maxWidth: GRID_WIDTH + "vw",
-        height: GRID_WIDTH + "vw",
-        maxHeight: GRID_WIDTH + "vw",
-      }}
-      className={`grid grid-cols-6 gap-0`}
-    >
-      {grid.map((row, rowIndex) =>
-        row.map((cell, colIndex) => (
-          <div
-            key={`${rowIndex}-${colIndex}`}
-            onClick={() => handleCellClick?.(rowIndex, colIndex)}
-            style={{
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-            }}
-            className={`${
-              cell === 1
-                ? "bg-red-400"
-                : cell === 2
-                ? "bg-gray-300"
-                : "bg-blue-200"
-            } border border-blue-300 flex justify-center items-center`}
-          >
-            {getCell?.(rowIndex, colIndex)}
-          </div>
-        )),
-      )}
-    </div>
+    gameState && (
+      <Grid grid={gameState.yourGrid} position={[0, 0, 3.25]}>
+        {gameState.yourShipPositions.map((ship) => {
+          const rotationY = ship.direction === "horizontal" ? 0 : -Math.PI / 2;
+
+          let positionX = -GRID_SIZE / 2;
+          let positionZ = -GRID_SIZE / 2;
+
+          // offset based on size of ship
+          positionX +=
+            ship.direction === "horizontal"
+              ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
+              : 0;
+          positionZ +=
+            ship.direction === "vertical"
+              ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
+              : 0;
+
+          // offset based on start position
+          positionX += ship.start.x * CELL_SIZE;
+          positionZ += ship.start.y * CELL_SIZE;
+
+          // offset to center of cell based on direction
+          positionX += ship.direction === "vertical" ? CELL_SIZE / 2 : 0;
+          positionZ += ship.direction === "horizontal" ? CELL_SIZE / 2 : 0;
+
+          const position = new Vector3(positionX, 0, positionZ);
+          return (
+            <mesh
+              position={position}
+              rotation={[0, rotationY, -Math.PI / 2]}
+              key={ship.type}
+            >
+              <cylinderGeometry args={[0.2, 0.2, SHIP_SIZE[ship.type], 32]} />
+              <meshStandardMaterial color="purple" />
+            </mesh>
+          );
+        })}
+      </Grid>
+    )
   );
 }
+
+const Grid = ({
+  position = [0, 0, 0],
+  children,
+  grid,
+}: {
+  position?: [number, number, number];
+  children?: ReactNode;
+  grid: number[][];
+}) => {
+  return (
+    <group position={position}>
+      <gridHelper
+        args={[GRID_WIDTH, GRID_SIZE, "black", "black"]}
+        rotation={[0, -Math.PI / 2, 0]}
+      />
+      {grid.map((row, rowIndex) =>
+        row.map((cell, colIndex) => (
+          <mesh
+            key={`${rowIndex}-${colIndex}`}
+            position={[
+              (colIndex / GRID_SIZE) * GRID_WIDTH -
+                GRID_WIDTH / 2 +
+                CELL_SIZE / 2,
+              0,
+              (rowIndex / GRID_SIZE) * GRID_WIDTH -
+                GRID_WIDTH / 2 +
+                CELL_SIZE / 2,
+            ]}
+          >
+            <sphereGeometry args={[0.2, 32, 16]} />
+            <meshStandardMaterial
+              color={
+                cell === 1 ? "red" : cell === 2 ? "gray" : new Color("#91f8ec")
+              }
+            />
+          </mesh>
+        )),
+      )}
+      {children}
+    </group>
+  );
+};
 
 function GameOverAlert({
   gameOverReason,

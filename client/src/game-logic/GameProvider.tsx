@@ -25,6 +25,7 @@ type GameContextType = {
     yourShips: number[][];
     opponentGrid: number[][];
     yourGrid: number[][];
+    yourShipPositions: Ship[];
   } | null;
 
   previousGames: EndState[];
@@ -107,10 +108,11 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
       const opponent = localPlayers[opponentId];
       setGameState({
         opponent,
-        yourShips: [],
+        yourShips: createEmptyGrid(),
         yourTurn: isAttacking,
         opponentGrid: createEmptyGrid(),
         yourGrid: createEmptyGrid(),
+        yourShipPositions: [],
       });
 
       const initShipsHandler = (ships: Ship[]) => {
@@ -119,6 +121,7 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
           return {
             ...prev,
             yourShips: calculateGrid(ships),
+            yourShipPositions: ships,
           };
         });
         navigate(`/game/${attacker}-${defender}`);
