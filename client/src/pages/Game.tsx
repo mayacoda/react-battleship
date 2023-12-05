@@ -18,7 +18,7 @@ import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import { Color, Vector3 } from "three";
 import { animated, useSpring } from "@react-spring/three";
 
@@ -112,7 +112,6 @@ function R3FGame({ onFired }: { onFired: () => void }) {
   return (
     <>
       <ambientLight />
-      <OrbitControls />
       <OpponentGrid />
       <PlayerGrid />
       {showCannon && (
@@ -209,9 +208,30 @@ function WaterBackground({
 
 function OpponentGrid() {
   const { gameState } = useGameContext();
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    if (gameState?.yourTurn) {
+      setText("Tap on enemy's grid to fire! 💣");
+    } else {
+      setText("");
+    }
+  }, [gameState?.yourTurn]);
 
   return (
-    gameState && <Grid grid={gameState.opponentGrid} position={[0, 0, -3.25]} />
+    gameState && (
+      <>
+        <Html
+          zIndexRange={[0, 10]}
+          transform={true}
+          rotation={[-Math.PI / 3, 0, 0]}
+          position={[0, 0, -3.5 - GRID_WIDTH / 2]}
+        >
+          <p>{text}</p>
+        </Html>
+        <Grid grid={gameState.opponentGrid} position={[0, 0, -3.25]} />
+      </>
+    )
   );
 }
 
@@ -220,44 +240,53 @@ function PlayerGrid() {
 
   return (
     gameState && (
-      <Grid grid={gameState.yourGrid} position={[0, 0, 3.25]}>
-        {gameState.yourShipPositions.map((ship) => {
-          const rotationY = ship.direction === "vertical" ? 0 : -Math.PI / 2;
+      <>
+        <Html
+          transform={true}
+          rotation={[-Math.PI / 3, 0, 0]}
+          zIndexRange={[0, 10]}
+        >
+          <p>Your Ships</p>
+        </Html>
+        <Grid grid={gameState.yourGrid} position={[0, 0, 3.25]}>
+          {gameState.yourShipPositions.map((ship) => {
+            const rotationY = ship.direction === "vertical" ? 0 : -Math.PI / 2;
 
-          let positionZ = -GRID_SIZE / 2;
-          let positionX = -GRID_SIZE / 2;
+            let positionZ = -GRID_SIZE / 2;
+            let positionX = -GRID_SIZE / 2;
 
-          // offset based on size of ship
-          positionZ +=
-            ship.direction === "horizontal"
-              ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
-              : 0;
-          positionX +=
-            ship.direction === "vertical"
-              ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
-              : 0;
+            // offset based on size of ship
+            positionZ +=
+              ship.direction === "horizontal"
+                ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
+                : 0;
+            positionX +=
+              ship.direction === "vertical"
+                ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
+                : 0;
 
-          // offset based on start position
-          positionZ += ship.start.x * CELL_SIZE;
-          positionX += ship.start.y * CELL_SIZE;
+            // offset based on start position
+            positionZ += ship.start.x * CELL_SIZE;
+            positionX += ship.start.y * CELL_SIZE;
 
-          // offset to center of cell based on direction
-          positionZ += ship.direction === "vertical" ? CELL_SIZE / 2 : 0;
-          positionX += ship.direction === "horizontal" ? CELL_SIZE / 2 : 0;
+            // offset to center of cell based on direction
+            positionZ += ship.direction === "vertical" ? CELL_SIZE / 2 : 0;
+            positionX += ship.direction === "horizontal" ? CELL_SIZE / 2 : 0;
 
-          const position = new Vector3(positionX, 0, positionZ);
-          return (
-            <mesh
-              position={position}
-              rotation={[0, rotationY, -Math.PI / 2]}
-              key={ship.type}
-            >
-              <cylinderGeometry args={[0.2, 0.2, SHIP_SIZE[ship.type], 32]} />
-              <meshStandardMaterial color="purple" />
-            </mesh>
-          );
-        })}
-      </Grid>
+            const position = new Vector3(positionX, 0, positionZ);
+            return (
+              <mesh
+                position={position}
+                rotation={[0, rotationY, -Math.PI / 2]}
+                key={ship.type}
+              >
+                <cylinderGeometry args={[0.2, 0.2, SHIP_SIZE[ship.type], 32]} />
+                <meshStandardMaterial color="purple" />
+              </mesh>
+            );
+          })}
+        </Grid>
+      </>
     )
   );
 }
