@@ -12,6 +12,8 @@ import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import { createEmptyGrid } from "@/game-logic/utils.ts";
 
+const SOCKET_URL = import.meta.env.VITE_SERVER_URL ?? "ws://localhost:3000";
+
 type GameContextType = {
   isConnected: boolean;
   players: Record<string, Player>;
@@ -43,7 +45,7 @@ const defaultContext: GameContextType = {
   players: {},
   challenges: [],
   currentPlayer: null,
-  socket: io(`${import.meta.env.BASE_URL}:3000`, {
+  socket: io(SOCKET_URL, {
     transports: ["websocket"],
   }),
   gameState: null,
@@ -71,7 +73,7 @@ export const GameProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     // Establish WebSocket connection when the component mounts
-    const newSocket: TypedClient = io("ws://localhost:3000", {
+    const newSocket: TypedClient = io(SOCKET_URL, {
       transports: ["websocket"],
     });
     setSocket(newSocket);

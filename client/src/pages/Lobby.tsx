@@ -23,7 +23,6 @@ import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { Player } from "@react-battleship/types";
 import { Html, OrbitControls } from "@react-three/drei";
-import { Perf } from "r3f-perf";
 import { Group, Mesh, Object3D, Quaternion, Vector3 } from "three";
 
 export const ProtectedLobbyPage = withSocketProtection(LobbyPage);
@@ -162,7 +161,6 @@ function R3FLobby() {
 
   return (
     <>
-      <Perf />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} />
       <OrbitControls />

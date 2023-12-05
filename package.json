@@ -15,7 +15,7 @@
     "dev": "NODE_ENV=development concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
     "dev:client": "cd client && pnpm dev",
     "dev:server": "cd server && pnpm dev",
-    "build": "pnpm build:types && pnpm build:client && pnpm build:server",
+    "build": "NODE_ENV=production pnpm build:types && pnpm build:client && pnpm build:server",
     "build:client": "cd client && pnpm build",
     "build:server": "cd server && pnpm build",
     "build:types": "cd types && pnpm build",
