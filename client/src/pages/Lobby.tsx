@@ -20,7 +20,7 @@ import {
 } from "react";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
 import withSocketProtection from "@/pages/withSocketProtection.tsx";
-import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
 import { Player } from "@react-battleship/types";
 import { Html, OrbitControls } from "@react-three/drei";
 import { Group, Mesh, Object3D, Quaternion, Vector3 } from "three";
@@ -97,7 +97,6 @@ function R3FLobby() {
   const game = useGameContext();
   const [target, setTarget] = useState<Vector3>();
   const [smoothTarget] = useState(() => new Vector3());
-  const { raycaster, camera, pointer } = useThree();
   const planeRef = useRef<Mesh>(null);
   const playerRef = useRef<Group>(null);
   const currentPlayer = game.currentPlayer;
@@ -115,23 +114,18 @@ function R3FLobby() {
 
   const handlePlaneClick = (event: ThreeEvent<MouseEvent>) => {
     if (!planeRef.current || !currentPlayer) return;
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(pointer, camera);
-    const intersects = raycaster.intersectObjects([planeRef.current]);
-    if (intersects.length > 0) {
-      const { x, y, z } = currentPlayer.position;
-      const direction = new Vector3().subVectors(
-        intersects[0].point,
-        new Vector3(x, y, z),
-      );
-      const distance = direction.length();
-      direction.normalize();
-      direction.multiplyScalar(Math.min(distance, 3));
+    const { x, y, z } = currentPlayer.position;
+    const direction = new Vector3().subVectors(
+      event.point,
+      new Vector3(x, y, z),
+    );
+    const distance = direction.length();
+    direction.normalize();
+    direction.multiplyScalar(Math.min(distance, 3));
 
-      setTarget(direction.add(new Vector3(x, y, z)));
-    }
+    setTarget(direction.add(new Vector3(x, y, z)));
+    // }
   };
 
   useFrame((_state, delta) => {
