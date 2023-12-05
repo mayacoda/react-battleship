@@ -43,7 +43,7 @@ const defaultContext: GameContextType = {
   players: {},
   challenges: [],
   currentPlayer: null,
-  socket: io("ws://localhost:3000", {
+  socket: io(`${import.meta.env.BASE_URL}:3000`, {
     transports: ["websocket"],
   }),
   gameState: null,
