@@ -22,7 +22,7 @@
     "test": "echo \"No Tests Implemented\"",
     "start": "cd server && pnpm start",
     "preview": "NODE_ENV=production pnpm build && pnpm start",
-    "postinstall": "pnpm install && pnpm build"
+    "postinstall": "pnpm build"
   },
   "devDependencies": {
     "concurrently": "^7.3.0",
