@@ -19,7 +19,7 @@ export function LoginPage({ onLogin }: Props) {
     <div className="flex justify-center items-center h-screen">
       <Card>
         <CardHeader>
-          <h1 className="text-2xl">Login</h1>
+          <h1 className="text-2xl">Join React Battleship</h1>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -27,13 +27,13 @@ export function LoginPage({ onLogin }: Props) {
               type="text"
               className="mb-3"
               autoComplete="off"
-              placeholder="Enter your username"
+              placeholder="What do we call you?"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
             <Button type="submit" className="w-full">
-              Login
+              Onwards! ⛵️
             </Button>
           </form>
         </CardContent>
