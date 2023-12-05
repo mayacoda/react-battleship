@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Color, Vector3 } from "three";
+import { animated, useSpring } from "@react-spring/three";
 
 const GRID_WIDTH = 6;
 const CELL_SIZE = GRID_WIDTH / GRID_SIZE;
@@ -76,7 +77,7 @@ export function GamePage() {
       )}
       {gameState && (
         <div className="h-full">
-          <h1 className="text-2xl flex flex-row justify-between mt-2 px-2">
+          <h1 className="text-2xl flex flex-row justify-between mt-2 px-2 absolute z-10 w-full">
             <Badge variant={gameState?.yourTurn ? "default" : "outline"}>
               {gameState?.yourTurn
                 ? `Turn ends in ${turnTimer}`
@@ -100,6 +101,10 @@ export function GamePage() {
 
 function R3FGame({ onFired }: { onFired: () => void }) {
   const { gameState, onCannonFired } = useGameContext();
+  const [cannonStart] = useState(new Vector3());
+  const [cannonEnd, setCannonEnd] = useState(new Vector3());
+  const [showCannon, setShowCannon] = useState(false);
+  const cannonDuration = 500;
   useFrame((state) => {
     state.camera.lookAt(new Vector3(0, 0, 0));
   });
@@ -110,6 +115,13 @@ function R3FGame({ onFired }: { onFired: () => void }) {
       <OrbitControls />
       <OpponentGrid />
       <PlayerGrid />
+      {showCannon && (
+        <CannonBall
+          start={cannonStart}
+          end={cannonEnd}
+          duration={cannonDuration}
+        />
+      )}
       <WaterBackground
         onClick={(e: ThreeEvent<MouseEvent>) => {
           const x = e.point.x;
@@ -120,18 +132,61 @@ function R3FGame({ onFired }: { onFired: () => void }) {
             z >= -GRID_WIDTH / 2 &&
             z <= GRID_WIDTH / 2;
 
-          if (!isInOpponentGrid || !gameState?.yourTurn) {
+          if (!isInOpponentGrid || !gameState?.yourTurn || showCannon) {
             return;
           }
 
           const col = Math.floor((x + GRID_WIDTH / 2) / CELL_SIZE);
           const row = Math.floor((z + GRID_WIDTH / 2) / CELL_SIZE);
 
-          onCannonFired(row, col);
-          onFired();
+          setShowCannon(true);
+          setCannonEnd(e.point.clone());
+
+          setTimeout(() => {
+            setShowCannon(false);
+            onCannonFired(row, col);
+            onFired();
+          }, cannonDuration + 200);
         }}
       />
     </>
+  );
+}
+
+function CannonBall({
+  start,
+  end,
+  duration,
+}: {
+  start: Vector3;
+  end: Vector3;
+  duration: number;
+}) {
+  const [state] = useState({
+    from: { position: start.toArray() },
+    to: async (next: (config: unknown) => Promise<void>) => {
+      const peakHeight = 2;
+
+      // Linearly interpolate the x and z positions
+      for (let t = 0; t <= 1; t += 0.01) {
+        const x = start.x + (end.x - start.x) * t;
+        const z = start.z + (end.z - start.z) * t;
+        // Calculate the y position for a parabolic trajectory
+        const y = start.y + peakHeight * Math.sin(Math.PI * t);
+        await next({ position: [x, y, z] });
+      }
+    },
+    reset: false,
+    config: { duration: duration / 1000 },
+  });
+
+  const { position } = useSpring(state);
+
+  return (
+    <animated.mesh position={position}>
+      <sphereGeometry args={[0.2, 32, 32]} />
+      <meshStandardMaterial color="black" />
+    </animated.mesh>
   );
 }
 
