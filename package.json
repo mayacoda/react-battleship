@@ -21,7 +21,8 @@
     "build:types": "cd types && pnpm build",
     "test": "echo \"No Tests Implemented\"",
     "start": "cd server && pnpm start",
-    "preview": "NODE_ENV=production pnpm build && pnpm start"
+    "preview": "NODE_ENV=production pnpm build && pnpm start",
+    "postinstall": "pnpm install && pnpm build"
   },
   "devDependencies": {
     "concurrently": "^7.3.0",
@@ -33,5 +34,9 @@
   "type": "module",
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
+  },
+  "engines": {
+    "node": "19.7.0",
+    "pnpm": "8.11.0"
   }
 }
