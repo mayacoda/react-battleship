@@ -3,7 +3,7 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "dom"],
-    "module": "ESNext",
+    "module": "NodeNext",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
@@ -11,7 +11,10 @@
 
     /* Linting */
     "strict": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@react-battleship/types": ["../types/dist"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "types"
   ],
   "version": "0.0.0",
   "description": "R3F + WebSocket battleship game",
@@ -14,9 +15,10 @@
     "dev": "NODE_ENV=development concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
     "dev:client": "cd client && pnpm dev",
     "dev:server": "cd server && pnpm dev",
-    "build": "pnpm build:client && pnpm build:server",
+    "build": "pnpm build:types && pnpm build:client && pnpm build:server",
     "build:client": "cd client && pnpm build",
     "build:server": "cd server && pnpm build",
+    "build:types": "cd types && pnpm build",
     "test": "echo \"No Tests Implemented\"",
     "start": "cd server && pnpm start",
     "preview": "NODE_ENV=production pnpm build && pnpm start"

@@ -3,7 +3,8 @@
     "strict": true,
     "declaration": true,
     "isolatedModules": true,
-    "emitDeclarationOnly": true,
+    "module": "NodeNext",
+    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src"
   },

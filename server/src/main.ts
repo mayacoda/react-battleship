@@ -2,25 +2,16 @@ import Fastify from "fastify";
 import { Server } from "socket.io";
 import { TypedServer } from "@react-battleship/types";
 import { PlayerManager } from "./PlayerManager.js";
+import FastifyStatic from "@fastify/static";
+import path from "path";
 
 const fastify = Fastify({ logger: true });
 const io: TypedServer = new Server(fastify.server, {});
 
 void fastify.listen({ port: 3000 });
 
-// fastify.register(FastifyStatic, {
-//   root: path.join(process.cwd(), "..", "client/dist"),
-// });
-
-fastify.get("/", function (_req, reply) {
-  reply.header("Access-Control-Allow-Origin", "*");
-  reply.header("Access-Control-Allow-Methods", "GET");
-  reply.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Origin, Cache-Control",
-  );
-
-  reply.type("text/html").send("index.html");
+fastify.register(FastifyStatic, {
+  root: path.join(process.cwd(), "..", "client/dist"),
 });
 
 fastify.ready().then(() => {

@@ -22,7 +22,8 @@
 
     /* Aliasing */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"],
+      "@react-battleship/types": ["../types/dist"]
     }
   },
   "include": ["src"],
