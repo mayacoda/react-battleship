@@ -1,9 +1,9 @@
 export const GRID_SIZE = 6;
 export enum SHIP_TYPE {
-  CARRIER,
-  BATTLESHIP,
-  CRUISER,
-  SUBMARINE,
+  CARRIER = 0,
+  BATTLESHIP = 1,
+  CRUISER = 2,
+  SUBMARINE = 3,
 }
 
 export const SHIP_SIZE: Record<SHIP_TYPE, number> = {

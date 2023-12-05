@@ -222,28 +222,28 @@ function PlayerGrid() {
     gameState && (
       <Grid grid={gameState.yourGrid} position={[0, 0, 3.25]}>
         {gameState.yourShipPositions.map((ship) => {
-          const rotationY = ship.direction === "horizontal" ? 0 : -Math.PI / 2;
+          const rotationY = ship.direction === "vertical" ? 0 : -Math.PI / 2;
 
-          let positionX = -GRID_SIZE / 2;
           let positionZ = -GRID_SIZE / 2;
+          let positionX = -GRID_SIZE / 2;
 
           // offset based on size of ship
-          positionX +=
+          positionZ +=
             ship.direction === "horizontal"
               ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
               : 0;
-          positionZ +=
+          positionX +=
             ship.direction === "vertical"
               ? (SHIP_SIZE[ship.type] * CELL_SIZE) / 2
               : 0;
 
           // offset based on start position
-          positionX += ship.start.x * CELL_SIZE;
-          positionZ += ship.start.y * CELL_SIZE;
+          positionZ += ship.start.x * CELL_SIZE;
+          positionX += ship.start.y * CELL_SIZE;
 
           // offset to center of cell based on direction
-          positionX += ship.direction === "vertical" ? CELL_SIZE / 2 : 0;
-          positionZ += ship.direction === "horizontal" ? CELL_SIZE / 2 : 0;
+          positionZ += ship.direction === "vertical" ? CELL_SIZE / 2 : 0;
+          positionX += ship.direction === "horizontal" ? CELL_SIZE / 2 : 0;
 
           const position = new Vector3(positionX, 0, positionZ);
           return (
@@ -278,27 +278,34 @@ const Grid = ({
         rotation={[0, -Math.PI / 2, 0]}
       />
       {grid.map((row, rowIndex) =>
-        row.map((cell, colIndex) => (
-          <mesh
-            key={`${rowIndex}-${colIndex}`}
-            position={[
-              (colIndex / GRID_SIZE) * GRID_WIDTH -
-                GRID_WIDTH / 2 +
-                CELL_SIZE / 2,
-              0,
-              (rowIndex / GRID_SIZE) * GRID_WIDTH -
-                GRID_WIDTH / 2 +
-                CELL_SIZE / 2,
-            ]}
-          >
-            <sphereGeometry args={[0.2, 32, 16]} />
-            <meshStandardMaterial
-              color={
-                cell === 1 ? "red" : cell === 2 ? "gray" : new Color("#91f8ec")
-              }
-            />
-          </mesh>
-        )),
+        row.map(
+          (cell, colIndex) =>
+            (cell === 1 || cell === 2) && (
+              <mesh
+                key={`${rowIndex}-${colIndex}`}
+                position={[
+                  (colIndex / GRID_SIZE) * GRID_WIDTH -
+                    GRID_WIDTH / 2 +
+                    CELL_SIZE / 2,
+                  0.3,
+                  (rowIndex / GRID_SIZE) * GRID_WIDTH -
+                    GRID_WIDTH / 2 +
+                    CELL_SIZE / 2,
+                ]}
+              >
+                <sphereGeometry args={[0.2, 32, 16]} />
+                <meshStandardMaterial
+                  color={
+                    cell === 1
+                      ? "red"
+                      : cell === 2
+                      ? "gray"
+                      : new Color("#91f8ec")
+                  }
+                />
+              </mesh>
+            ),
+        ),
       )}
       {children}
     </group>
