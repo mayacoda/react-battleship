@@ -1,12 +1,3 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { ChallengeAlert } from "@/components/ui/ChallengeAlert.tsx";
 import {
@@ -22,8 +13,16 @@ import { useGameContext } from "@/game-logic/useGameContext.tsx";
 import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
 import { Player } from "@react-battleship/types";
-import { Html, OrbitControls } from "@react-three/drei";
-import { Group, Mesh, Object3D, Quaternion, Vector3 } from "three";
+import { Clone, Html, OrbitControls, useGLTF } from "@react-three/drei";
+import {
+  Group,
+  LinearFilter,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  Quaternion,
+  Vector3,
+} from "three";
 
 export const ProtectedLobbyPage = withSocketProtection(LobbyPage);
 
@@ -32,55 +31,8 @@ export function LobbyPage() {
     <>
       <ChallengeAlert />
       <div className="flex flex-col h-screen">
-        <PrototypeLobby />
         <R3FLobbyWrapper />
       </div>
-    </>
-  );
-}
-
-function PrototypeLobby() {
-  const game = useGameContext();
-  const [show, setShow] = useState(false);
-  const onChallenge = useCallback(
-    (playerId: string) => {
-      game.socket.emit("challenge", playerId);
-    },
-    [game.socket],
-  );
-  const players = Object.values(game.players);
-
-  return (
-    <>
-      <Button onClick={() => setShow((prev) => !prev)}>
-        {show ? "hide" : "show"}
-      </Button>
-      {show && (
-        <Table className="fixed z-10">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {players.map((player) => (
-              <TableRow key={player.id}>
-                <TableCell>{player.name}</TableCell>
-                <TableCell>
-                  {player.isPlaying ? (
-                    <Badge>Playing</Badge>
-                  ) : player.id !== game.currentPlayer?.id ? (
-                    <Button size="sm" onClick={() => onChallenge(player.id)}>
-                      Challenge
-                    </Button>
-                  ) : null}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
     </>
   );
 }
@@ -155,7 +107,7 @@ function R3FLobby() {
 
   return (
     <>
-      <ambientLight intensity={0.5} />
+      <ambientLight intensity={1} />
       <directionalLight position={[10, 10, 10]} />
       <OrbitControls />
       <mesh
@@ -167,7 +119,7 @@ function R3FLobby() {
         <planeGeometry args={[100, 100]} />
         <meshStandardMaterial color="lightblue" />
       </mesh>
-      <ControlledPlayerSphere player={currentPlayer!} ref={playerRef} />
+      <ControlledPlayer player={currentPlayer!} ref={playerRef} />
       {players.map((player) => (
         <OtherPlayer
           key={player.id}
@@ -179,7 +131,7 @@ function R3FLobby() {
   );
 }
 
-const ControlledPlayerSphere = forwardRef<Group, { player: Player }>(
+const ControlledPlayer = forwardRef<Group, { player: Player }>(
   ({ player }, ref) => {
     const [smoothedCameraPosition] = useState(
       () =>
@@ -291,14 +243,20 @@ const PlayerObject = forwardRef<
     position: [number, number, number];
     children?: ReactNode;
   }
->(({ color, position, quaternion, children }, ref) => {
+>(({ position, quaternion, children }, ref) => {
+  const model = useGLTF("/models/rowboat.glb");
+
+  // @ts-expect-error exported by blender
+  const material: MeshStandardMaterial = model.materials.rowboat;
+
+  material.metalness = 0;
+  material.roughness = 1;
+  material.map!.minFilter = LinearFilter;
+
   return (
     <group position={position} quaternion={quaternion} ref={ref}>
-      <mesh position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.2, 0.2, 0.2]} />
-        <meshStandardMaterial color={color} />
-        {children}
-      </mesh>
+      <Clone object={model.scene} scale={0.4} />
+      {children}
     </group>
   );
 });

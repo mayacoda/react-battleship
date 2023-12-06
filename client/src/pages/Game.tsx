@@ -2,6 +2,7 @@ import {
   EndState,
   GameOverReason,
   GRID_SIZE,
+  SHIP_NAMES,
   SHIP_SIZE,
 } from "@react-battleship/types";
 import { useGameContext } from "@/game-logic/useGameContext.tsx";
@@ -18,8 +19,8 @@ import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
-import { Color, Vector3 } from "three";
+import { Clone, Float, Html, useAnimations, useGLTF } from "@react-three/drei";
+import { Color, MeshStandardMaterial, Vector3 } from "three";
 import { animated, useSpring } from "@react-spring/three";
 
 const GRID_WIDTH = 6;
@@ -111,7 +112,9 @@ function R3FGame({ onFired }: { onFired: () => void }) {
 
   return (
     <>
+      {/*<OrbitControls />*/}
       <ambientLight />
+      <directionalLight position={[0, 10, 0]} intensity={1} />
       <OpponentGrid />
       <PlayerGrid />
       {showCannon && (
@@ -237,6 +240,13 @@ function OpponentGrid() {
 
 function PlayerGrid() {
   const { gameState } = useGameContext();
+  const ships = useGLTF("/models/ships.glb");
+
+  // @ts-expect-error exported by blender
+  const material: MeshStandardMaterial = ships.materials.ships;
+
+  material.metalness = 0;
+  material.roughness = 1;
 
   return (
     gameState && (
@@ -250,7 +260,11 @@ function PlayerGrid() {
         </Html>
         <Grid grid={gameState.yourGrid} position={[0, 0, 3.25]}>
           {gameState.yourShipPositions.map((ship) => {
-            const rotationY = ship.direction === "vertical" ? 0 : -Math.PI / 2;
+            const model = ships.scene.children.find(
+              (child) => child.name === SHIP_NAMES[ship.type],
+            );
+            const rotationY =
+              ship.direction === "horizontal" ? 0 : -Math.PI / 2;
 
             let positionZ = -GRID_SIZE / 2;
             let positionX = -GRID_SIZE / 2;
@@ -273,16 +287,17 @@ function PlayerGrid() {
             positionZ += ship.direction === "vertical" ? CELL_SIZE / 2 : 0;
             positionX += ship.direction === "horizontal" ? CELL_SIZE / 2 : 0;
 
-            const position = new Vector3(positionX, 0, positionZ);
+            const position = new Vector3(positionX, 0.1, positionZ);
             return (
-              <mesh
-                position={position}
-                rotation={[0, rotationY, -Math.PI / 2]}
-                key={ship.type}
-              >
-                <cylinderGeometry args={[0.2, 0.2, SHIP_SIZE[ship.type], 32]} />
-                <meshStandardMaterial color="purple" />
-              </mesh>
+              model && (
+                <Float speed={4} rotationIntensity={0.2} key={ship.type}>
+                  <Clone
+                    object={model}
+                    position={position}
+                    rotation={[0, rotationY, 0]}
+                  />
+                </Float>
+              )
             );
           })}
         </Grid>
@@ -300,6 +315,14 @@ const Grid = ({
   children?: ReactNode;
   grid: number[][];
 }) => {
+  const fire = useGLTF("/models/fire.glb");
+  const animations = useAnimations(fire.animations, fire.scene);
+
+  useEffect(() => {
+    const action = animations.actions[animations.names[0]];
+    action?.play();
+  }, [animations]);
+
   return (
     <group position={position}>
       <gridHelper
@@ -307,34 +330,39 @@ const Grid = ({
         rotation={[0, -Math.PI / 2, 0]}
       />
       {grid.map((row, rowIndex) =>
-        row.map(
-          (cell, colIndex) =>
-            (cell === 1 || cell === 2) && (
-              <mesh
-                key={`${rowIndex}-${colIndex}`}
-                position={[
-                  (colIndex / GRID_SIZE) * GRID_WIDTH -
-                    GRID_WIDTH / 2 +
-                    CELL_SIZE / 2,
-                  0.3,
-                  (rowIndex / GRID_SIZE) * GRID_WIDTH -
-                    GRID_WIDTH / 2 +
-                    CELL_SIZE / 2,
-                ]}
-              >
-                <sphereGeometry args={[0.2, 32, 16]} />
-                <meshStandardMaterial
-                  color={
-                    cell === 1
-                      ? "red"
-                      : cell === 2
-                      ? "gray"
-                      : new Color("#91f8ec")
-                  }
+        row.map((cell, colIndex) => {
+          const position = new Vector3(
+            (colIndex / GRID_SIZE) * GRID_WIDTH -
+              GRID_WIDTH / 2 +
+              CELL_SIZE / 2,
+            0.3,
+            (rowIndex / GRID_SIZE) * GRID_WIDTH -
+              GRID_WIDTH / 2 +
+              CELL_SIZE / 2,
+          ).toArray();
+          return (
+            <group key={`${rowIndex}-${colIndex}`} position={position}>
+              {cell === 1 && (
+                <Clone
+                  object={fire.scene}
+                  position={[-5.65, -0.1, -3.3]}
+                  scale={[2, 1, 2]}
                 />
-              </mesh>
-            ),
-        ),
+              )}
+              {cell === 2 && (
+                <Float rotationIntensity={3} speed={3}>
+                  <Html
+                    transform={true}
+                    rotation={[Math.PI / 2, 0, 0]}
+                    zIndexRange={[0, 10]}
+                  >
+                    <div>ⓧ</div>
+                  </Html>
+                </Float>
+              )}
+            </group>
+          );
+        }),
       )}
       {children}
     </group>

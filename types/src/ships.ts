@@ -13,6 +13,13 @@ export const SHIP_SIZE: Record<SHIP_TYPE, number> = {
   [SHIP_TYPE.SUBMARINE]: 2,
 };
 
+export const SHIP_NAMES: Record<SHIP_TYPE, string> = {
+  [SHIP_TYPE.CARRIER]: "carrier",
+  [SHIP_TYPE.BATTLESHIP]: "battleship",
+  [SHIP_TYPE.CRUISER]: "cruiser",
+  [SHIP_TYPE.SUBMARINE]: "submarine",
+};
+
 export const TOTAL_SHIPS =
   SHIP_SIZE[SHIP_TYPE.CARRIER] +
   SHIP_SIZE[SHIP_TYPE.BATTLESHIP] +
