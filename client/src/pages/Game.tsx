@@ -20,8 +20,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
 import { Clone, Float, Html, useAnimations, useGLTF } from "@react-three/drei";
-import { Color, MeshStandardMaterial, Vector3 } from "three";
+import { MeshStandardMaterial, Vector3 } from "three";
 import { animated, useSpring } from "@react-spring/three";
+import { WaterPlane } from "@/components/ui/WaterPlane.tsx";
 
 const GRID_WIDTH = 6;
 const CELL_SIZE = GRID_WIDTH / GRID_SIZE;
@@ -79,7 +80,10 @@ export function GamePage() {
       {gameState && (
         <div className="h-full">
           <h1 className="text-2xl flex flex-row justify-between mt-2 px-2 absolute z-10 w-full">
-            <Badge variant={gameState?.yourTurn ? "default" : "outline"}>
+            <Badge
+              variant={gameState?.yourTurn ? "default" : "outline"}
+              className={"text-white"}
+            >
               {gameState?.yourTurn
                 ? `Turn ends in ${turnTimer}`
                 : "Opponent's turn"}
@@ -198,14 +202,12 @@ function WaterBackground({
   onClick: (e: ThreeEvent<MouseEvent>) => void;
 }) {
   return (
-    <mesh
+    <WaterPlane
+      size={200}
       onClick={onClick}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, -0.01, 0]}
-    >
-      <planeGeometry args={[100, 100]} />
-      <meshStandardMaterial color={new Color("#91f8ec")} />
-    </mesh>
+    />
   );
 }
 
@@ -230,7 +232,7 @@ function OpponentGrid() {
           rotation={[-Math.PI / 3, 0, 0]}
           position={[0, 0, -3.5 - GRID_WIDTH / 2]}
         >
-          <p>{text}</p>
+          <p className={"text-white"}>{text}</p>
         </Html>
         <Grid grid={gameState.opponentGrid} position={[0, 0, -3.25]} />
       </>
@@ -256,7 +258,7 @@ function PlayerGrid() {
           rotation={[-Math.PI / 3, 0, 0]}
           zIndexRange={[0, 10]}
         >
-          <p>Your Ships</p>
+          <p className={"text-white"}>Your Ships</p>
         </Html>
         <Grid grid={gameState.yourGrid} position={[0, 0, 3.25]}>
           {gameState.yourShipPositions.map((ship) => {
@@ -326,7 +328,7 @@ const Grid = ({
   return (
     <group position={position}>
       <gridHelper
-        args={[GRID_WIDTH, GRID_SIZE, "black", "black"]}
+        args={[GRID_WIDTH, GRID_SIZE, "white", "white"]}
         rotation={[0, -Math.PI / 2, 0]}
       />
       {grid.map((row, rowIndex) =>
@@ -356,7 +358,7 @@ const Grid = ({
                     rotation={[Math.PI / 2, 0, 0]}
                     zIndexRange={[0, 10]}
                   >
-                    <div>ⓧ</div>
+                    <div className={"text-white"}>ⓧ</div>
                   </Html>
                 </Float>
               )}

@@ -13,7 +13,7 @@ import { useGameContext } from "@/game-logic/useGameContext.tsx";
 import withSocketProtection from "@/pages/withSocketProtection.tsx";
 import { Canvas, ThreeEvent, useFrame } from "@react-three/fiber";
 import { Player } from "@react-battleship/types";
-import { Clone, Html, OrbitControls, useGLTF } from "@react-three/drei";
+import { Clone, Float, Html, OrbitControls, useGLTF } from "@react-three/drei";
 import {
   Group,
   LinearFilter,
@@ -23,6 +23,7 @@ import {
   Quaternion,
   Vector3,
 } from "three";
+import { WaterPlane } from "@/components/ui/WaterPlane.tsx";
 
 export const ProtectedLobbyPage = withSocketProtection(LobbyPage);
 
@@ -39,9 +40,29 @@ export function LobbyPage() {
 
 function R3FLobbyWrapper() {
   return (
-    <Canvas>
-      <R3FLobby />
-    </Canvas>
+    <div
+      className="w-full h-full"
+      style={{
+        backgroundImage: `
+        linear-gradient(
+  0deg,
+  hsl(306deg 100% 83%) 0%,
+  hsl(294deg 100% 83%) 11%,
+  hsl(282deg 100% 83%) 22%,
+  hsl(270deg 100% 83%) 33%,
+  hsl(258deg 100% 82%) 44%,
+  hsl(247deg 100% 82%) 56%,
+  hsl(235deg 100% 82%) 67%,
+  hsl(223deg 100% 82%) 78%,
+  hsl(211deg 100% 82%) 89%,
+  hsl(199deg 100% 81%) 100%
+)`,
+      }}
+    >
+      <Canvas>
+        <R3FLobby />
+      </Canvas>
+    </div>
   );
 }
 
@@ -108,17 +129,15 @@ function R3FLobby() {
   return (
     <>
       <ambientLight intensity={1} />
-      <directionalLight position={[10, 10, 10]} />
+      <directionalLight position={[10, 10, 10]} intensity={3.5} castShadow />
       <OrbitControls />
-      <mesh
+      <WaterPlane
+        ref={planeRef}
+        size={100}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.1, 0]}
-        ref={planeRef}
         onClick={handlePlaneClick}
-      >
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="lightblue" />
-      </mesh>
+      />
       <ControlledPlayer player={currentPlayer!} ref={playerRef} />
       {players.map((player) => (
         <OtherPlayer
@@ -254,8 +273,17 @@ const PlayerObject = forwardRef<
   material.map!.minFilter = LinearFilter;
 
   return (
-    <group position={position} quaternion={quaternion} ref={ref}>
-      <Clone object={model.scene} scale={0.4} />
+    <group
+      position={position}
+      quaternion={quaternion}
+      ref={ref}
+      castShadow
+      receiveShadow
+    >
+      <Float>
+        <Clone object={model.scene} scale={0.4} position={[0, 0.1, 0]} />
+      </Float>
+
       {children}
     </group>
   );
