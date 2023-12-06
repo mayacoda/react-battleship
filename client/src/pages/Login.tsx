@@ -16,7 +16,25 @@ export function LoginPage({ onLogin }: Props) {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div
+      className="flex justify-center items-center h-screen"
+      style={{
+        backgroundImage: `
+        linear-gradient(
+  0deg,
+  hsl(306deg 100% 83%) 0%,
+  hsl(294deg 100% 83%) 11%,
+  hsl(282deg 100% 83%) 22%,
+  hsl(270deg 100% 83%) 33%,
+  hsl(258deg 100% 82%) 44%,
+  hsl(247deg 100% 82%) 56%,
+  hsl(235deg 100% 82%) 67%,
+  hsl(223deg 100% 82%) 78%,
+  hsl(211deg 100% 82%) 89%,
+  hsl(199deg 100% 81%) 100%
+)`,
+      }}
+    >
       <Card>
         <CardHeader>
           <h1 className="text-2xl">Join React Battleship</h1>

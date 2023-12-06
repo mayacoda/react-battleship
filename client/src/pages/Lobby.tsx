@@ -24,6 +24,7 @@ import {
   Vector3,
 } from "three";
 import { WaterPlane } from "@/components/ui/WaterPlane.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 
 export const ProtectedLobbyPage = withSocketProtection(LobbyPage);
 
@@ -186,7 +187,6 @@ const ControlledPlayer = forwardRef<Group, { player: Player }>(
     return (
       <PlayerObject
         ref={playerMesh}
-        color={"yellow"}
         position={[player.position.x, player.position.y, player.position.z]}
         quaternion={[x, y, z, w]}
       />
@@ -217,11 +217,12 @@ function OtherPlayer({
     <group
       onClick={(e) => {
         e.stopPropagation();
-        setShowChallengeButton((prev) => !prev);
+        if (!player.isPlaying) {
+          setShowChallengeButton((prev) => !prev);
+        }
       }}
     >
       <PlayerObject
-        color={player.isPlaying ? "red" : "green"}
         quaternion={[
           player.rotation.x,
           player.rotation.y,
@@ -238,11 +239,18 @@ function OtherPlayer({
               textAlign: "center",
             }}
           >
-            <p>{player.name}</p>
+            <Badge variant={player.isPlaying ? "secondary" : "default"}>
+              {player.name}
+            </Badge>
             {showChallengeButton && (
               <Button
+                variant="destructive"
                 style={{ pointerEvents: "all" }}
-                onClick={() => onChallenge(player.id)}
+                onClick={() => {
+                  if (!player.isPlaying) {
+                    onChallenge(player.id);
+                  }
+                }}
               >
                 Challenge
               </Button>
@@ -257,7 +265,6 @@ function OtherPlayer({
 const PlayerObject = forwardRef<
   Group,
   {
-    color: string;
     quaternion: [number, number, number, number] | Quaternion;
     position: [number, number, number];
     children?: ReactNode;
