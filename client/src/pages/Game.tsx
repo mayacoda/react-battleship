@@ -358,7 +358,7 @@ const Grid = ({
                     rotation={[Math.PI / 2, 0, 0]}
                     zIndexRange={[0, 10]}
                   >
-                    <div className={"text-white"}>ⓧ</div>
+                    <div className={"text-blue-300"}>ⓧ</div>
                   </Html>
                 </Float>
               )}

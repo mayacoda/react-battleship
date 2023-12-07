@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button.tsx";
 import { ChallengeAlert } from "@/components/ui/ChallengeAlert.tsx";
 import {
   forwardRef,
@@ -233,27 +232,37 @@ function OtherPlayer({
       >
         <Html style={{ pointerEvents: "none" }} zIndexRange={[0, 40]}>
           <div
+            className="flex flex-col gap-2"
             style={{
               transform: "translate3d(-50%, -70px, 0)",
               width: "120px",
               textAlign: "center",
             }}
           >
-            <Badge variant={player.isPlaying ? "secondary" : "default"}>
+            <Badge
+              className="text-center justify-evenly"
+              variant={player.isPlaying ? "secondary" : "default"}
+            >
               {player.name}
             </Badge>
             {showChallengeButton && (
-              <Button
-                variant="destructive"
-                style={{ pointerEvents: "all" }}
+              <button
+                className="text-4xl bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90"
+                style={{
+                  pointerEvents: "all",
+                  borderRadius: "50%",
+                  padding: "15px",
+                  width: "70px",
+                  height: "70px",
+                }}
                 onClick={() => {
                   if (!player.isPlaying) {
                     onChallenge(player.id);
                   }
                 }}
               >
-                Challenge
-              </Button>
+                💣
+              </button>
             )}
           </div>
         </Html>
@@ -262,14 +271,15 @@ function OtherPlayer({
   );
 }
 
-const PlayerObject = forwardRef<
+export const PlayerObject = forwardRef<
   Group,
   {
     quaternion: [number, number, number, number] | Quaternion;
     position: [number, number, number];
+    rotation?: [number, number, number];
     children?: ReactNode;
   }
->(({ position, quaternion, children }, ref) => {
+>(({ position, quaternion, rotation, children }, ref) => {
   const model = useGLTF("/models/rowboat.glb");
 
   // @ts-expect-error exported by blender
@@ -278,11 +288,13 @@ const PlayerObject = forwardRef<
   material.metalness = 0;
   material.roughness = 1;
   material.map!.minFilter = LinearFilter;
+  material.map!.magFilter = LinearFilter;
 
   return (
     <group
       position={position}
       quaternion={quaternion}
+      rotation={rotation}
       ref={ref}
       castShadow
       receiveShadow

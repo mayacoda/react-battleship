@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Canvas } from "@react-three/fiber";
+import { WaterPlane } from "@/components/ui/WaterPlane.tsx";
+import { PlayerObject } from "@/pages/Lobby.tsx";
 
 type Props = {
   onLogin: (username: string) => void;
@@ -35,7 +38,7 @@ export function LoginPage({ onLogin }: Props) {
 )`,
       }}
     >
-      <Card>
+      <Card className="z-10">
         <CardHeader>
           <h1 className="text-2xl">Join React Battleship</h1>
         </CardHeader>
@@ -56,6 +59,18 @@ export function LoginPage({ onLogin }: Props) {
           </form>
         </CardContent>
       </Card>
+
+      <div className="absolute z-0 h-full w-full">
+        <Canvas>
+          <ambientLight intensity={3} />
+          <PlayerObject
+            quaternion={[0, 0, 0, 1]}
+            rotation={[Math.PI / 2, Math.PI / 3, 0]}
+            position={[0, -0.5, 3.4]}
+          />
+          <WaterPlane size={200} position={[0, 0, 2]} />
+        </Canvas>
+      </div>
     </div>
   );
 }

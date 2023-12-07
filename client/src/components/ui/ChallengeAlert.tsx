@@ -37,7 +37,7 @@ export function ChallengeAlert() {
     <AlertDialog open={!!challenger}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>You've been attacked!</AlertDialogTitle>
+          <AlertDialogTitle>You've been attacked! 💣</AlertDialogTitle>
           <AlertDialogDescription>
             {challenger?.name} has challenged you to a game of Battleship! You
             have {15 - counter} seconds to accept.
