@@ -18,7 +18,6 @@ import {
   LinearFilter,
   Mesh,
   MeshStandardMaterial,
-  Object3D,
   Quaternion,
   Vector3,
 } from "three";
@@ -106,13 +105,7 @@ function R3FLobby() {
       smoothTarget.lerp(target, 5 * delta);
       game.socket.emit("move", smoothTarget);
 
-      const mock = new Object3D();
-      mock.position.copy(playerRef.current.position);
-      mock.lookAt(smoothTarget);
-
-      const targetQuaternion = mock.quaternion.clone();
-
-      playerRef.current.quaternion.slerp(targetQuaternion, 10 * delta);
+      playerRef.current.lookAt(smoothTarget);
       game.socket.emit("rotation", {
         x: playerRef.current.quaternion.x,
         y: playerRef.current.quaternion.y,
